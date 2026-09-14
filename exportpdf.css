@@ -1,0 +1,111 @@
+body { 
+    font-family: sans-serif; 
+    font-size: 7px; 
+    color: #333333; 
+}
+
+.title { 
+    font-size: 13px; 
+    font-weight: bold; 
+    text-align: center; 
+    margin-bottom: 10px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+    color: #0f172a;
+}
+
+.header-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-bottom: 10px; 
+}
+.header-table td { 
+    vertical-align: top; 
+    font-size: 8.5px; 
+    line-height: 1.3;
+}
+
+.data-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: fixed; 
+}
+.data-table th { 
+    background-color: #f1f5f9; 
+    border: 0.5pt solid #cbd5e1; 
+    padding: 4px 2px; 
+    font-size: 6.5px; 
+    text-transform: uppercase; 
+    text-align: center; 
+    color: #1e293b;
+}
+.data-table td { 
+    border: 0.5pt solid #cbd5e1; 
+    padding: 3px 2px; 
+    font-size: 6.5px; 
+    word-wrap: break-word; 
+}
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.bold { font-weight: bold; }
+.bg-mat { background-color: #fefec8; }
+.bg-proc { background-color: #eff6ff; }
+.bg-cogs { background-color: #cbd5e1; }
+.bg-total { background-color: #dcfce7; color: #15803d; }
+
+.notes-layout-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 15px; 
+    table-layout: fixed;
+}
+
+.notes-container { 
+    width: 65%; 
+    border-collapse: collapse;
+    border: 0.5pt solid #94a3b8; 
+    background-color: #ffffff; 
+}
+.notes-header {
+    text-align: left;
+    font-size: 8px;
+    font-weight: bold;
+    color: #0f172a;
+    border-bottom: 0.5pt solid #e2e8f0;
+    padding: 4px 6px;
+    background-color: #f8fafc;
+}
+.note-line { 
+    font-size: 6.5px;
+    line-height: 1.3; 
+    color: #334155;
+    padding: 1.5px 6px;
+    border: none;
+}
+
+.signature-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+}
+.signature-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: fixed;
+}
+.signature-title { 
+    font-size: 7px; 
+    font-weight: bold; 
+    color: #0f172a;
+    background-color: #f8fafc;
+    border: 0.5pt solid #94a3b8;
+    padding: 3px 0;
+    text-align: center;
+    text-transform: uppercase;
+    width: 33.33%;
+}
+.signature-box { 
+    height: 50px; 
+    border: 0.5pt solid #94a3b8; 
+    text-align: center;
+}

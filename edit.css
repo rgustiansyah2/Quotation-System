@@ -1,0 +1,16 @@
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f8; margin: 0; }
+        .container { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 32px 24px; }
+        h2 { text-align: center; color: #333; }
+        .profile-pic { display: flex; justify-content: center; margin-bottom: 16px; }
+        .profile-pic img { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; border: 2px solid #e0e0e0; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; color: #555; font-weight: 500; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; box-sizing: border-box; }
+        input[type="file"] { border: none; }
+        .btn { width: 100%; background: #1976d2; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #1565c0; }
+        .btn-cancel { width: 100%; background: #d83b3b; color: #f3f1f1; border: none; padding: 12px; border-radius: 6px; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+        .btn-cancel:hover { background: #e0e0e0; }
+        .alert { padding: 10px; border-radius: 6px; margin-bottom: 16px; text-align: center; }
+        .alert-success { background: #e3f9e5; color: #2e7d32; }
+        .alert-error { background: #fdecea; color: #c62828; }

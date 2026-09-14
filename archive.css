@@ -1,0 +1,81 @@
+.archive-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+}
+
+.archive-filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #dbe2ea;
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.archive-filter-wrap label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+}
+
+.archive-year-select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    font-size: 0.85rem;
+    color: #0f172a;
+}
+
+.archive-year-panel {
+    margin-bottom: 22px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.archive-year-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.archive-year-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.archive-year-header span {
+    font-size: 0.8rem;
+    color: #475569;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.archive-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.empty-archive-state {
+    padding: 30px;
+    color: #94a3b8;
+    font-style: italic;
+    text-align: center;
+    background: #fff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+}

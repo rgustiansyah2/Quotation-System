@@ -1,0 +1,219 @@
+.profile-card {
+    background: #fff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(44, 62, 80, 0.05);
+    border: 1px solid #e6e9ef;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.profile-header h2 {
+    font-size: 1.8rem;
+    color: #2d3e50;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.profile-header p {
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.avatar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 35px;
+    position: relative;
+}
+
+.avatar-circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: #f4f6f9;
+}
+
+.avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-badge {
+    background: #2d3e50;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-top: -12px;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.profile-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-group label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #34495e;
+    margin-bottom: 8px;
+}
+
+.profile-group input {
+    width: 100%;
+    height: 44px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    background: #fdfdfd;
+    color: #2d3e50;
+    transition: all 0.2s ease-in-out;
+}
+
+.profile-group input:focus {
+    outline: none;
+    border-color: #1abc9c;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.15);
+}
+
+.profile-action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    border-top: 1px solid #f1f1f1;
+    padding-top: 25px;
+    margin-top: 10px;
+}
+
+.btn-save {
+    background: #1abc9c;
+    color: #fff;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save:hover {
+    background: #16a085;
+}
+
+.btn-back {
+    color: #7f8c8d;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.btn-back:hover {
+    color: #2d3e50;
+    text-decoration: underline;
+}
+
+.profile-alert {
+    padding: 14px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+.profile-alert.success { background: #e8f8f5; color: #117a65; border: 1px solid #a3e4d7; }
+.profile-alert.error { background: #fadbd8; color: #78281f; border: 1px solid #f5b7b1; }
+
+@media (max-width: 650px) {
+    .profile-form-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    .profile-action-buttons {
+        flex-direction: column;
+        text-align: center;
+    }
+    .btn-save { width: 100%; }
+}
+
+.danger-zone {
+    margin-top: 35px;
+    padding: 25px;
+    border: 1px solid #fadbd8;
+    background-color: #fdf2f2;
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+}
+
+.danger-zone h3 {
+    color: #c0392b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.danger-zone p {
+    font-size: 13px;
+    color: #78281f;
+    line-height: 1.5;
+    margin-bottom: 18px;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background: #c0392b;
+    box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
+}
+
+@media (max-width: 650px) {
+    .danger-zone {
+        text-align: center;
+        padding: 20px;
+    }
+    .btn-delete {
+        width: 100%;
+    }
+}

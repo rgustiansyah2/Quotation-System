@@ -1,0 +1,164 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background: #f4f6f9;
+    padding-top: 80px; 
+}
+
+.header {
+    width: 100%;
+    height: 80px;
+    background: #2d3e50;
+    color: #fff;
+    padding: 18px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+    position: fixed; 
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 20px; 
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    text-decoration: none; 
+    display: inline-block; 
+}
+
+.logo:hover,
+.logo:visited {
+    color: #fff;
+}
+
+.user-detail,
+.user-name,
+.user-role,
+.right-section,
+.user-info,
+.logo-section {
+    color: #fff;
+}
+
+#sidebar-toggle {
+    background: #2d3e50;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+}
+
+#sidebar-toggle:hover {
+    background: #16a085;
+}
+
+.logout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(45, 62, 80, 0.55); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 99999; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.logout-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.logout-glass-box {
+    background: rgba(255, 255, 255, 0.85); 
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.logout-spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(45, 62, 80, 0.1);
+    border-top: 4px solid #1abc9c; 
+    border-radius: 50%;
+    margin: 0 auto 20px auto;
+    animation: logoutSpin 0.8s linear infinite; 
+}
+
+.logout-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #2d3e50 !important;
+}
+
+.logout-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+    color: #34495e !important;
+}
+
+
+.user-menu a.activity-menu-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.activity-badge {
+    display: none;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.activity-badge.visible {
+    display: inline-flex;
+}
+
+@keyframes logoutSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(3600deg); }
+}

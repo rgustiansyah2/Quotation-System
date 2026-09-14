@@ -1,0 +1,41 @@
+.edit-page-heading {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+}
+
+.edit-page-heading .btn-back-mmp {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        padding: 8px 15px !important;
+        border: 1px solid #475569;
+        border-radius: 6px;
+        background: #475569 !important;
+        color: #ffffff !important;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.2;
+        text-decoration: none !important;
+        box-shadow: 0 2px 4px rgba(15, 23, 42, 0.16);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.edit-page-heading .btn-back-mmp:hover {
+        background: #334155 !important;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+}
+
+        .main-content { margin-left: 260px; padding: 30px; box-sizing: border-box; width: calc(100% - 260px); }
+        .mmp-header-card { background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); padding: 20px; margin-bottom: 20px; }
+        .form-group-title { display: flex; flex-direction: column; gap: 8px; max-width: 500px; }
+        .form-group-title label { font-weight: 600; color: #2c3e50; font-size: 14px; }
+        .form-group-title input { padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        .table-card { background: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); padding: 20px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+        .table-mmp { width: 100%; border-collapse: collapse; font-size: 11px; background: #fff; table-layout: auto; }
+        .table-mmp input { width: 100%; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
+        .readonly-bg { background-color: #f1f5f9 !important; font-weight: 600; text-align: right; }
+        .table-mmp input[type="number"] { text-align: right; }

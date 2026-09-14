@@ -1,0 +1,163 @@
+        body {
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-content {
+            margin-top: 70px;
+            margin-left: 260px; 
+            padding-top: 90px;  
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-bottom: 40px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            width: calc(100% - 260px);
+        }
+
+        .config-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+            padding: 24px 30px;
+            width: 100%;
+        }
+
+        .config-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .config-tabs {
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 24px;
+            gap: 8px;
+        }
+
+        .config-tabs .nav-link {
+            color: #64748b;
+            font-weight: 600;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 10px 18px;
+            border-radius: 0;
+            transition: all 0.2s ease;
+        }
+
+        .config-tabs .nav-link:hover {
+            color: #2563eb;
+            border-color: transparent;
+        }
+
+        .config-tabs .nav-link.active {
+            color: #2563eb;
+            background-color: transparent;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .form-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-box label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-box .form-control,
+        .form-box .form-select {
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            padding: 9px 12px;
+            font-size: 0.9rem;
+            transition: border-color 0.15s ease-in-out;
+        }
+
+        .form-box .form-control:focus,
+        .form-box .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .btn-submit {
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            padding: 9px 16px;
+            white-space: nowrap; 
+        }
+
+        .table-config {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-config thead {
+            background-color: #0f172a;
+            color: #ffffff;
+        }
+
+        .table-config th {
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 12px 16px;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .table-config td {
+            padding: 12px 16px;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table-config tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-config tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        @media (max-width: 992px) {
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding-top: 80px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+        .swal2-container.swal2-backdrop-show {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            background: rgba(0, 0, 0, 0.4) !important; 
+        }
+        .clickable-key {
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+        .clickable-key:hover {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
