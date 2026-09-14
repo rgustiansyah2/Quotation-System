@@ -51,98 +51,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
         $item['status'] = in_array($_POST['status'] ?? 'active', ['active', 'inactive']) ? $_POST['status'] : 'active';
 
         if ($item['part_name'] === '') {
-            $message = 'Nama item wajib diisi.';
+            $message = 'Nama item (Part Name) wajib diisi.';
             $messageType = 'error';
         } else {
-            if ($editingId > 0) {
-                $stmt = $conn->prepare(
-                    'UPDATE tbl_packing_cost SET part_name = ?, item_category = ?, weight_gram = ?, qty_per_kg = ?, volume_cm3 = ?, unit = ?, purchase_price = ?, item_price = ?, max_capacity_gram = ?, size_detail = ?, revision_no = ?, effective_date = ?, status = ? WHERE id = ?'
-                );
-                if ($stmt) {
-                    $types = str_repeat('s', 13) . 'i';
-                    $stmt->bind_param(
-                        $types,
-                        $item['part_name'],
-                        $item['item_category'],
-                        $item['weight_gram'],
-                        $item['qty_per_kg'],
-                        $item['volume_cm3'],
-                        $item['unit'],
-                        $item['purchase_price'],
-                        $item['item_price'],
-                        $item['max_capacity_gram'],
-                        $item['size_detail'],
-                        $item['revision_no'],
-                        $item['effective_date'],
-                        $item['status'],
-                        $editingId
-                    );
-                    if ($stmt->execute()) {
-                        $message = 'Data packing berhasil diperbarui.';
-                        $messageType = 'success';
-                        write_audit_log('tbl_packing_cost', $editingId, 'update', 'part_name', $item['part_name'], "Memperbarui harga/detail packing: " . $item['part_name']);
-                    } else {
-                        $message = 'Gagal memperbarui data: ' . $stmt->error;
-                        $messageType = 'error';
-                    }
-                    $stmt->close();
+            try {
+                $chkStmt = $conn->prepare("SELECT id FROM tbl_packing_cost WHERE LOWER(part_name) = LOWER(?) AND id != ? LIMIT 1");
+                $chkStmt->bind_param("si", $item['part_name'], $editingId);
+                $chkStmt->execute();
+                $chkResult = $chkStmt->get_result();
+                
+                if ($chkResult->num_rows > 0) {
+                    $message = "Gagal menyimpan: Nama item '" . htmlspecialchars($item['part_name']) . "' sudah terdaftar di database!";
+                    $messageType = 'warning';
                 } else {
-                    $message = 'Gagal menyiapkan perbaruan: ' . $conn->error;
-                    $messageType = 'error';
-                }
-            } else {
-                $stmt = $conn->prepare(
-                    'INSERT INTO tbl_packing_cost (part_name, item_category, weight_gram, qty_per_kg, volume_cm3, unit, purchase_price, item_price, max_capacity_gram, size_detail, revision_no, effective_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                );
-                if ($stmt) {
-                    $createdBy = $_SESSION['user_id'];
-                    $types = str_repeat('s', 13) . 'i';
-                    $stmt->bind_param(
-                        $types,
-                        $item['part_name'],
-                        $item['item_category'],
-                        $item['weight_gram'],
-                        $item['qty_per_kg'],
-                        $item['volume_cm3'],
-                        $item['unit'],
-                        $item['purchase_price'],
-                        $item['item_price'],
-                        $item['max_capacity_gram'],
-                        $item['size_detail'],
-                        $item['revision_no'],
-                        $item['effective_date'],
-                        $item['status'],
-                        $createdBy
-                    );
-                    if ($stmt->execute()) {
-                        write_audit_log('tbl_packing_cost', $conn->insert_id, 'insert', 'part_name', $item['part_name'], "Menambahkan harga/detail packing: " . $item['part_name']);
-                        $message = 'Packing cost baru berhasil ditambahkan.';
-                        $messageType = 'success';
-                        $item = [
-                            'part_name' => '',
-                            'item_category' => '',
-                            'weight_gram' => '',
-                            'qty_per_kg' => '',
-                            'volume_cm3' => '',
-                            'unit' => '',
-                            'purchase_price' => '',
-                            'item_price' => '',
-                            'max_capacity_gram' => '',
-                            'size_detail' => '',
-                            'revision_no' => 0,
-                            'effective_date' => date('Y-m-d'),
-                            'status' => 'active'
-                        ];
-                        $editingId = 0;
+                    $chkStmt->close();
+
+                    if ($editingId > 0) {
+                        $stmt = $conn->prepare(
+                            'UPDATE tbl_packing_cost SET part_name = ?, item_category = ?, weight_gram = ?, qty_per_kg = ?, volume_cm3 = ?, unit = ?, purchase_price = ?, item_price = ?, max_capacity_gram = ?, size_detail = ?, revision_no = ?, effective_date = ?, status = ? WHERE id = ?'
+                        );
+                        if ($stmt) {
+                            $types = str_repeat('s', 13) . 'i';
+                            $stmt->bind_param(
+                                $types,
+                                $item['part_name'],
+                                $item['item_category'],
+                                $item['weight_gram'],
+                                $item['qty_per_kg'],
+                                $item['volume_cm3'],
+                                $item['unit'],
+                                $item['purchase_price'],
+                                $item['item_price'],
+                                $item['max_capacity_gram'],
+                                $item['size_detail'],
+                                $item['revision_no'],
+                                $item['effective_date'],
+                                $item['status'],
+                                $editingId
+                            );
+                            if ($stmt->execute()) {
+                                $message = 'Data packing cost berhasil diperbarui.';
+                                $messageType = 'success';
+                                write_audit_log('tbl_packing_cost', $editingId, 'update', 'part_name', $item['part_name'], "Memperbarui harga/detail packing: " . $item['part_name']);
+                            } else {
+                                $message = 'Gagal memperbarui data: ' . $stmt->error;
+                                $messageType = 'error';
+                            }
+                            $stmt->close();
+                        }
                     } else {
-                        $message = 'Gagal menyimpan packing cost: ' . $stmt->error;
-                        $messageType = 'error';
+                        $stmt = $conn->prepare(
+                            'INSERT INTO tbl_packing_cost (part_name, item_category, weight_gram, qty_per_kg, volume_cm3, unit, purchase_price, item_price, max_capacity_gram, size_detail, revision_no, effective_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                        );
+                        if ($stmt) {
+                            $createdBy = $_SESSION['user_id'];
+                            $types = str_repeat('s', 13) . 'i';
+                            $stmt->bind_param(
+                                $types,
+                                $item['part_name'],
+                                $item['item_category'],
+                                $item['weight_gram'],
+                                $item['qty_per_kg'],
+                                $item['volume_cm3'],
+                                $item['unit'],
+                                $item['purchase_price'],
+                                $item['item_price'],
+                                $item['max_capacity_gram'],
+                                $item['size_detail'],
+                                $item['revision_no'],
+                                $item['effective_date'],
+                                $item['status'],
+                                $createdBy
+                            );
+                            if ($stmt->execute()) {
+                                write_audit_log('tbl_packing_cost', $conn->insert_id, 'insert', 'part_name', $item['part_name'], "Menambahkan harga/detail packing: " . $item['part_name']);
+                                $message = 'Packing cost baru berhasil ditambahkan.';
+                                $messageType = 'success';
+                                $item = [
+                                    'part_name' => '',
+                                    'item_category' => '',
+                                    'weight_gram' => '',
+                                    'qty_per_kg' => '',
+                                    'volume_cm3' => '',
+                                    'unit' => '',
+                                    'purchase_price' => '',
+                                    'item_price' => '',
+                                    'max_capacity_gram' => '',
+                                    'size_detail' => '',
+                                    'revision_no' => 0,
+                                    'effective_date' => date('Y-m-d'),
+                                    'status' => 'active'
+                                ];
+                                $editingId = 0;
+                            } else {
+                                $message = 'Gagal menyimpan packing cost: ' . $stmt->error;
+                                $messageType = 'error';
+                            }
+                            $stmt->close();
+                        }
                     }
-                    $stmt->close();
-                } else {
-                    $message = 'Gagal menyiapkan simpan: ' . $conn->error;
-                    $messageType = 'error';
                 }
+            } catch (Exception $e) {
+                $message = 'Terjadi kesalahan database: ' . $e->getMessage();
+                $messageType = 'error';
             }
         }
     } elseif ($action === 'import') {
@@ -154,7 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
             $extension = strtolower(pathinfo($_FILES['import_file']['name'], PATHINFO_EXTENSION));
 
             $expectedHeaders = ['part_name', 'item_category', 'weight_gram', 'qty_per_kg', 'volume_cm3', 'unit', 'purchase_price', 'item_price', 'max_capacity_gram', 'size_detail', 'revision_no', 'effective_date', 'status'];
-
             $importRows = [];
 
             if (in_array($extension, ['xlsx', 'xls'], true)) {
@@ -169,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
                         $header = array_map(fn($c) => strtolower(trim((string)$c)), $headerRow);
 
                         if (array_diff($expectedHeaders, $header)) {
-                            $message = 'Header XLSX tidak sesuai. Gunakan format yang benar.';
+                            $message = 'Header XLSX tidak sesuai format standar.';
                             $messageType = 'error';
                         } else {
                             for ($r = 2; $r <= $sheet->getHighestRow(); $r++) {
@@ -199,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
                     } else {
                         $header = array_map(fn($col) => strtolower(trim($col)), $header);
                         if (array_diff($expectedHeaders, $header)) {
-                            $message = 'Header CSV tidak sesuai.';
+                            $message = 'Header CSV tidak sesuai format standar.';
                             $messageType = 'error';
                             fclose($handle);
                         } else {
@@ -218,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
                     }
                 }
             } else {
-                $message = 'Format file tidak didukung. Gunakan CSV atau XLSX.';
+                $message = 'Format file tidak didukung. Harap gunakan file .CSV atau .XLSX';
                 $messageType = 'error';
             }
 
@@ -226,21 +236,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
                 $insertStmt = $conn->prepare(
                     'INSERT INTO tbl_packing_cost (part_name, item_category, weight_gram, qty_per_kg, volume_cm3, unit, purchase_price, item_price, max_capacity_gram, size_detail, revision_no, effective_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
-                if (!$insertStmt) {
-                    $message = 'Gagal menyiapkan import: ' . $conn->error;
+                
+                $chkStmt = $conn->prepare("SELECT id FROM tbl_packing_cost WHERE LOWER(part_name) = LOWER(?) LIMIT 1");
+
+                if (!$insertStmt || !$chkStmt) {
+                    $message = 'Gagal menyiapkan query import database.';
                     $messageType = 'error';
                 } else {
                     $createdBy = $_SESSION['user_id'];
                     $types = str_repeat('s', 13) . 'i';
                     $rowsImported = 0;
-                    $errors = [];
+                    $skippedCount = 0;
+                    $skippedNames = [];
 
                     foreach ($importRows as $record) {
                         $partName = trim($record['part_name']);
                         if ($partName === '') {
-                            $errors[] = 'Nama part kosong.';
                             continue;
                         }
+
+                        $chkStmt->bind_param("s", $partName);
+                        $chkStmt->execute();
+                        if ($chkStmt->get_result()->num_rows > 0) {
+                            $skippedCount++;
+                            if (count($skippedNames) < 5) {
+                                $skippedNames[] = $partName;
+                            }
+                            continue;
+                        }
+
                         $itemCategory = trim($record['item_category']);
                         $weightGram = trim($record['weight_gram']) !== '' ? trim($record['weight_gram']) : '0';
                         $qtyPerKg = trim($record['qty_per_kg']) !== '' ? trim($record['qty_per_kg']) : '0';
@@ -277,15 +301,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
 
                         if ($insertStmt->execute()) {
                             $rowsImported++;
-                        } else {
-                            $errors[] = 'Gagal memasukkan baris.';
                         }
                     }
 
                     $insertStmt->close();
+                    $chkStmt->close();
 
-                    $message = 'Import selesai. Total berhasil: ' . $rowsImported . ' data.';
-                    $messageType = 'success';
+                    $message = "Import Selesai.<br><b>Berhasil:</b> $rowsImported data.";
+                    if ($skippedCount > 0) {
+                        $moreMsg = count($skippedNames) < $skippedCount ? " dan lainnya..." : "";
+                        $message .= "<br><span style='color:#e11d48;'><b>Dilewati (Duplikat):</b> $skippedCount data (" . implode(', ', $skippedNames) . "$moreMsg)</span>";
+                        $messageType = 'warning';
+                    } else {
+                        $messageType = 'success';
+                    }
+
                     if ($rowsImported > 0) {
                         write_audit_log('tbl_packing_cost', 0, 'insert', 'excel_csv_import', null, "Berhasil mengunduh/import massal " . $rowsImported . " item data packing cost melalui file.");
                     }
@@ -293,26 +323,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
             }
         }
     } elseif ($action === 'delete' && $editingId > 0) {
-        $deletedName = "ID: " . $editingId;
-        $check = $conn->query("SELECT part_name FROM tbl_packing_cost WHERE id = $editingId");
-        if ($check && $row = $check->fetch_assoc()) {
-            $deletedName = $row['part_name'];
-        }
-
-        $stmt = $conn->prepare('DELETE FROM tbl_packing_cost WHERE id = ?');
-        if ($stmt) {
-            $stmt->bind_param('i', $editingId);
-            if ($stmt->execute()) {
-                write_audit_log('tbl_packing_cost', $editingId, 'delete', 'part_name', $deletedName, "Menghapus harga/detail packing: " . $deletedName);
-                $message = 'Packing cost berhasil dihapus.';
-                $messageType = 'success';
-            } else {
-                $message = 'Gagal menghapus packing cost: ' . $stmt->error;
-                $messageType = 'error';
+        try {
+            $deletedName = "ID: " . $editingId;
+            $check = $conn->query("SELECT part_name FROM tbl_packing_cost WHERE id = $editingId");
+            if ($check && $row = $check->fetch_assoc()) {
+                $deletedName = $row['part_name'];
             }
-            $stmt->close();
-        } else {
-            $message = 'Gagal menyiapkan hapus: ' . $conn->error;
+
+            $stmt = $conn->prepare('DELETE FROM tbl_packing_cost WHERE id = ?');
+            if ($stmt) {
+                $stmt->bind_param('i', $editingId);
+                if ($stmt->execute()) {
+                    write_audit_log('tbl_packing_cost', $editingId, 'delete', 'part_name', $deletedName, "Menghapus harga/detail packing: " . $deletedName);
+                    $message = 'Item Packing Cost "' . htmlspecialchars($deletedName) . '" berhasil dihapus.';
+                    $messageType = 'success';
+                } else {
+                    $message = 'Gagal menghapus packing cost: ' . $stmt->error;
+                    $messageType = 'error';
+                }
+                $stmt->close();
+            }
+        } catch (Exception $e) {
+            $message = 'Gagal menghapus! Data mungkin sedang digunakan pada transaksi/quotation lain.';
             $messageType = 'error';
         }
         $editingId = 0;
@@ -533,22 +565,13 @@ if ($itemRes) {
 </div>
 
 <script>
-const Toast = Swal.mixin({
-    toast: true,
-    position: 'top-end',
-    showConfirmButton: false,
-    timer: 3500,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer);
-        toast.addEventListener('mouseleave', Swal.resumeTimer);
-    }
-});
-
 <?php if ($message): ?>
-    Toast.fire({
-        icon: '<?= $messageType === "success" ? "success" : "error" ?>',
-        title: '<?= addslashes($message) ?>'
+    Swal.fire({
+        icon: '<?= $messageType ?>',
+        title: '<?= $messageType === "success" ? "Berhasil!" : ($messageType === "warning" ? "Perhatian!" : "Terjadi Kesalahan!") ?>',
+        html: '<?= addslashes($message) ?>',
+        confirmButtonColor: '#2563eb',
+        confirmButtonText: 'Tutup'
     });
 
     const url = new URL(window.location);
@@ -560,7 +583,7 @@ const Toast = Swal.mixin({
 function confirmDeleteItem(id, itemName) {
     Swal.fire({
         title: 'Hapus Item Packing?',
-        text: `Item "${itemName}" akan dihapus secara permanen.`,
+        html: `Apakah Anda yakin ingin menghapus item <b>"${itemName}"</b>?<br><small style="color:#ef4444;">Tindakan ini tidak dapat dibatalkan.</small>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
