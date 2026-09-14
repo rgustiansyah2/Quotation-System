@@ -11,6 +11,25 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
+if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
+    $filename = "packing_cost_export_" . date('Ymd_His') . ".csv";
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=' . $filename);
+
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['part_name', 'item_category', 'weight_gram', 'qty_per_kg', 'volume_cm3', 'unit', 'purchase_price', 'item_price', 'max_capacity_gram', 'size_detail', 'revision_no', 'effective_date', 'status']);
+
+    $query = $conn->query("SELECT part_name, item_category, weight_gram, qty_per_kg, volume_cm3, unit, purchase_price, item_price, max_capacity_gram, size_detail, revision_no, effective_date, status FROM tbl_packing_cost ORDER BY item_category, part_name");
+    
+    if ($query) {
+        while ($row = $query->fetch_assoc()) {
+            fputcsv($output, $row);
+        }
+    }
+    fclose($output);
+    exit;
+}
+
 $message = '';
 $messageType = 'success';
 $editingId = 0;
@@ -35,7 +54,58 @@ $editingId = intval($_POST['item_id'] ?? $_GET['item_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
     
-    if ($action === 'save') {
+    if ($action === 'bulk_delete') {
+        $selectedIds = $_POST['selected_ids'] ?? [];
+        if (!empty($selectedIds) && is_array($selectedIds)) {
+            $ids = array_map('intval', $selectedIds);
+            $inClause = implode(',', $ids);
+            try {
+                if ($conn->query("DELETE FROM tbl_packing_cost WHERE id IN ($inClause)")) {
+                    $count = $conn->affected_rows;
+                    write_audit_log('tbl_packing_cost', 0, 'delete', 'bulk_delete', null, "Menghapus massal $count item packing cost.");
+                    $message = "Berhasil menghapus $count item packing cost.";
+                    $messageType = 'success';
+                } else {
+                    $message = 'Gagal menghapus item terpilih: ' . $conn->error;
+                    $messageType = 'error';
+                }
+            } catch (Exception $e) {
+                $message = 'Sebagian data gagal dihapus karena sedang terikat pada transaksi lain.';
+                $messageType = 'error';
+            }
+        } else {
+            $message = 'Tidak ada item yang dipilih untuk dihapus.';
+            $messageType = 'warning';
+        }
+    }
+    elseif ($action === 'bulk_update') {
+        $selectedIds = $_POST['selected_ids'] ?? [];
+        $bulkStatus = $_POST['bulk_status'] ?? '';
+
+        if (!empty($selectedIds) && is_array($selectedIds) && in_array($bulkStatus, ['active', 'inactive'], true)) {
+            $ids = array_map('intval', $selectedIds);
+            $inClause = implode(',', $ids);
+            
+            $stmt = $conn->prepare("UPDATE tbl_packing_cost SET status = ? WHERE id IN ($inClause)");
+            if ($stmt) {
+                $stmt->bind_param('s', $bulkStatus);
+                if ($stmt->execute()) {
+                    $count = $stmt->affected_rows;
+                    write_audit_log('tbl_packing_cost', 0, 'update', 'bulk_status', $bulkStatus, "Memperbarui status massal menjadi $bulkStatus pada $count item.");
+                    $message = "Berhasil memperbarui status $count item menjadi " . ucfirst($bulkStatus) . ".";
+                    $messageType = 'success';
+                } else {
+                    $message = 'Gagal memperbarui status: ' . $stmt->error;
+                    $messageType = 'error';
+                }
+                $stmt->close();
+            }
+        } else {
+            $message = 'Pilihlah item dan status baru yang valid untuk pembaruan massal.';
+            $messageType = 'warning';
+        }
+    }
+    elseif ($action === 'save') {
         $item['part_name'] = trim($_POST['part_name'] ?? '');
         $item['item_category'] = trim($_POST['item_category'] ?? '');
         $item['weight_gram'] = trim($_POST['weight_gram'] ?? '0');
@@ -156,7 +226,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
                 $messageType = 'error';
             }
         }
-    } elseif ($action === 'import') {
+    } 
+    elseif ($action === 'import') {
         if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
             $message = 'Unggah file gagal. Pastikan file dipilih dan tidak rusak.';
             $messageType = 'error';
@@ -322,7 +393,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $action === 'delete') {
                 }
             }
         }
-    } elseif ($action === 'delete' && $editingId > 0) {
+    } 
+    elseif ($action === 'delete' && $editingId > 0) {
         try {
             $deletedName = "ID: " . $editingId;
             $check = $conn->query("SELECT part_name FROM tbl_packing_cost WHERE id = $editingId");
@@ -420,7 +492,7 @@ if ($itemRes) {
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
                                 <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-secondary" style="min-width:180px;">Upload</button>
+                                <button type="submit" class="btn btn-secondary" style="min-width:180px;">Upload File</button>
                             </div>
                         </div>
                         <p style="font-size:.95rem; color:#475569; margin-top:8px; margin-bottom:0;">Format: part_name,item_category,weight_gram,qty_per_kg,volume_cm3,unit,purchase_price,item_price,max_capacity_gram,size_detail,revision_no,effective_date,status (CSV atau XLSX)</p>
@@ -501,64 +573,92 @@ if ($itemRes) {
                     </div>
                 </form>
 
-                <div class="search-container" style="margin: 20px 0 15px 0; max-width: 320px;">
-                    <input type="text" id="search_packing_cost" placeholder="Cari nama item, kategori, atau size..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                <div class="top-table-controls">
+                    <div class="search-container" style="flex:1; max-width:320px;">
+                        <input type="text" id="search_packing_cost" placeholder="Cari nama item, kategori, atau size..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                    </div>
+                    <div>
+                        <a href="packing_cost.php?action=export_excel" class="btn btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:600; background-color:#10b981; color:#fff; border:none; padding:10px 16px;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                            Export Excel
+                        </a>
+                    </div>
                 </div>
 
-                <div class="table-wrap">
-                    <table id="table_packing_cost_master">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Nama Item</th>
-                                <th>Kategori</th>
-                                <th>Size</th>
-                                <th>Berat(g)</th>
-                                <th>Jumlah/Kg</th>
-                                <th>Volume(cm3)</th>
-                                <th>Harga Beli</th>
-                                <th>Harga/Lembar</th>
-                                <th>Daya Maks</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($items)): ?>
-                                <?php foreach ($items as $index => $row): ?>
-                                    <?php 
-                                    $qty_val = floatval($row['qty_per_kg']); 
-                                    $final_qty = (($qty_val - floor($qty_val)) > 0.5) ? ceil($qty_val) : floor($qty_val);
+                <form id="bulkActionForm" method="post" action="packing_cost.php">
+                    <input type="hidden" name="action" id="bulk_action_input" value="">
+                    <input type="hidden" name="bulk_status" id="bulk_status_input" value="">
 
-                                    $price_val = floatval($row['item_price']); 
-                                    $final_price = (($price_val - floor($price_val)) > 0.5) ? ceil($price_val) : floor($price_val);
+                    <div class="bulk-actions-bar">
+                        <span id="selected_count_label" style="font-weight:600; font-size:0.9rem; color:#334155;">0 item dipilih</span>
+                        <div class="bulk-buttons">
+                            <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="submitBulkUpdate('active')">Set Active</button>
+                            <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="submitBulkUpdate('inactive')">Set Inactive</button>
+                            <button type="button" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem;" onclick="submitBulkDelete()">Hapus Terpilih</button>
+                        </div>
+                    </div>
 
-                                    $max_val = floatval($row['max_capacity_gram']);
-                                    $final_max = (($max_val - floor($max_val)) > 0.5) ? ceil($max_val) : floor($max_val);
-                                    ?>
-                                    <tr>
-                                        <td class="row-number"><?= $index + 1 ?></td>
-                                        <td><?= htmlspecialchars($row['part_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['item_category']) ?></td>
-                                        <td><?= htmlspecialchars($row['size_detail']) ?></td>
-                                        <td><?= htmlspecialchars(number_format($row['weight_gram'], 4, ',', '.')) ?></td>
-                                        <td><?= htmlspecialchars(number_format($final_qty, 0, ',', '.')) ?></td>
-                                        <td><?= htmlspecialchars(number_format($row['volume_cm3'], 4, ',', '.')) ?></td>
-                                        <td><?= htmlspecialchars(number_format($row['purchase_price'], 2, ',', '.')) ?></td>
-                                        <td><?= htmlspecialchars(number_format($final_price, 0, ',', '.')) ?></td>
-                                        <td><?= htmlspecialchars(number_format($final_max, 0, ',', '.')) ?></td>
-                                        <td><span class="status-chip status-<?= $row['status'] === 'active' ? 'active' : 'inactive' ?>"><?= htmlspecialchars(ucfirst($row['status'])) ?></span></td>
-                                        <td class="action-links">
-                                            <a href="packing_cost.php?edit_id=<?= $row['id'] ?>">Edit</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr class="no-data-row"><td colspan="12" class="text-center">Belum ada data packing cost.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="table-wrap">
+                        <table id="table_packing_cost_master">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">
+                                        <input type="checkbox" id="check_all_items" style="cursor:pointer; width:16px; height:16px;">
+                                    </th>
+                                    <th>No</th>
+                                    <th class="sortable" onclick="sortTable(2)">Nama Item <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(3)">Kategori <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(4)">Size <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(5, true)">Berat(g) <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(6, true)">Jumlah/Kg <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(7, true)">Volume(cm3) <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(8, true)">Harga Beli <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(9, true)">Harga/Lembar <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(10, true)">Daya Maks <span class="sort-icon">▲▼</span></th>
+                                    <th class="sortable" onclick="sortTable(11)">Status <span class="sort-icon">▲▼</span></th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($items)): ?>
+                                    <?php foreach ($items as $index => $row): ?>
+                                        <?php 
+                                        $qty_val = floatval($row['qty_per_kg']); 
+                                        $final_qty = (($qty_val - floor($qty_val)) > 0.5) ? ceil($qty_val) : floor($qty_val);
+
+                                        $price_val = floatval($row['item_price']); 
+                                        $final_price = (($price_val - floor($price_val)) > 0.5) ? ceil($price_val) : floor($price_val);
+
+                                        $max_val = floatval($row['max_capacity_gram']);
+                                        $final_max = (($max_val - floor($max_val)) > 0.5) ? ceil($max_val) : floor($max_val);
+                                        ?>
+                                        <tr>
+                                            <td style="text-align: center;">
+                                                <input type="checkbox" name="selected_ids[]" value="<?= $row['id'] ?>" class="item-checkbox" style="cursor:pointer; width:16px; height:16px;">
+                                            </td>
+                                            <td class="row-number"><?= $index + 1 ?></td>
+                                            <td><?= htmlspecialchars($row['part_name']) ?></td>
+                                            <td><?= htmlspecialchars($row['item_category']) ?></td>
+                                            <td><?= htmlspecialchars($row['size_detail']) ?></td>
+                                            <td><?= htmlspecialchars(number_format($row['weight_gram'], 4, ',', '.')) ?></td>
+                                            <td><?= htmlspecialchars(number_format($final_qty, 0, ',', '.')) ?></td>
+                                            <td><?= htmlspecialchars(number_format($row['volume_cm3'], 4, ',', '.')) ?></td>
+                                            <td><?= htmlspecialchars(number_format($row['purchase_price'], 2, ',', '.')) ?></td>
+                                            <td><?= htmlspecialchars(number_format($final_price, 0, ',', '.')) ?></td>
+                                            <td><?= htmlspecialchars(number_format($final_max, 0, ',', '.')) ?></td>
+                                            <td><span class="status-chip status-<?= $row['status'] === 'active' ? 'active' : 'inactive' ?>"><?= htmlspecialchars(ucfirst($row['status'])) ?></span></td>
+                                            <td class="action-links">
+                                                <a href="packing_cost.php?edit_id=<?= $row['id'] ?>">Edit</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr class="no-data-row"><td colspan="13" class="text-center">Belum ada data packing cost.</td></tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -598,7 +698,66 @@ function confirmDeleteItem(id, itemName) {
     });
 }
 
+let sortDirections = {};
+function sortTable(columnIndex, isNumeric = false) {
+    const table = document.getElementById("table_packing_cost_master");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr:not(.no-data-row)"));
+    
+    sortDirections[columnIndex] = !sortDirections[columnIndex];
+    const isAscending = sortDirections[columnIndex];
+
+    rows.sort((rowA, rowB) => {
+        let cellA = rowA.cells[columnIndex].textContent.trim();
+        let cellB = rowB.cells[columnIndex].textContent.trim();
+
+        if (isNumeric) {
+            cellA = parseFloat(cellA.replace(/\./g, '').replace(',', '.')) || 0;
+            cellB = parseFloat(cellB.replace(/\./g, '').replace(',', '.')) || 0;
+            return isAscending ? cellA - cellB : cellB - cellA;
+        } else {
+            return isAscending 
+                ? cellA.localeCompare(cellB, undefined, {sensitivity: 'base'})
+                : cellB.localeCompare(cellA, undefined, {sensitivity: 'base'});
+        }
+    });
+
+    rows.forEach((row, index) => {
+        tbody.appendChild(row);
+        const numCell = row.querySelector('.row-number');
+        if (numCell) numCell.textContent = index + 1;
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+    const checkAll = document.getElementById('check_all_items');
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const countLabel = document.getElementById('selected_count_label');
+
+    function updateSelectedCount() {
+        const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+        if (countLabel) {
+            countLabel.textContent = `${checkedCount} item dipilih`;
+        }
+    }
+
+    if (checkAll) {
+        checkAll.addEventListener('change', function() {
+            const visibleCheckboxes = document.querySelectorAll('#table_packing_cost_master tbody tr:not([style*="display: none"]) .item-checkbox');
+            visibleCheckboxes.forEach(cb => cb.checked = checkAll.checked);
+            updateSelectedCount();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            updateSelectedCount();
+            if (!this.checked && checkAll) {
+                checkAll.checked = false;
+            }
+        });
+    });
+
     const searchInput = document.getElementById('search_packing_cost');
     const tableBody = document.querySelector('#table_packing_cost_master tbody');
     
@@ -609,9 +768,9 @@ document.addEventListener("DOMContentLoaded", function() {
             let visibleCount = 0;
 
             rows.forEach(row => {
-                const partName = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
-                const category = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
-                const sizeDetail = row.cells[3] ? row.cells[3].textContent.toLowerCase() : '';
+                const partName = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
+                const category = row.cells[3] ? row.cells[3].textContent.toLowerCase() : '';
+                const sizeDetail = row.cells[4] ? row.cells[4].textContent.toLowerCase() : '';
 
                 if (partName.includes(filterValue) || category.includes(filterValue) || sizeDetail.includes(filterValue)) {
                     row.style.display = "";
@@ -628,7 +787,55 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+
+function submitBulkDelete() {
+    const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+    if (checkedCount === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tidak Ada Item Pilih',
+            text: 'Silakan centang item yang ingin dihapus terlebih dahulu.',
+            confirmButtonColor: '#2563eb'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Hapus Massal?',
+        html: `Apakah Anda yakin ingin menghapus <b>${checkedCount} item</b> terpilih?<br><small style="color:#ef4444;">Data yang dihapus tidak bisa dikembalikan.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, Hapus Semua!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('bulk_action_input').value = 'bulk_delete';
+            document.getElementById('bulkActionForm').submit();
+        }
+    });
+}
+
+function submitBulkUpdate(newStatus) {
+    const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+    if (checkedCount === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tidak Ada Item Pilih',
+            text: 'Silakan centang item yang ingin diubah statusnya terlebih dahulu.',
+            confirmButtonColor: '#2563eb'
+        });
+        return;
+    }
+
+    document.getElementById('bulk_action_input').value = 'bulk_update';
+    document.getElementById('bulk_status_input').value = newStatus;
+    document.getElementById('bulkActionForm').submit();
+}
 </script>
+
 <?php
 if (isset($conn) && $conn instanceof mysqli) {
     $conn->close();
