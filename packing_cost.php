@@ -12,21 +12,69 @@ if (empty($_SESSION['user_id'])) {
 }
 
 if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
-    $filename = "packing_cost_export_" . date('Ymd_His') . ".csv";
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=' . $filename);
+    if (!class_exists('\\PhpOffice\\PhpSpreadsheet\\Spreadsheet')) {
+        die('Library PhpSpreadsheet belum terpasang. Jalankan "composer require phpoffice/phpspreadsheet" terlebih dahulu.');
+    }
 
-    $output = fopen('php://output', 'w');
-    fputcsv($output, ['part_name', 'item_category', 'weight_gram', 'qty_per_kg', 'volume_cm3', 'unit', 'purchase_price', 'item_price', 'max_capacity_gram', 'size_detail', 'revision_no', 'effective_date', 'status']);
+    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Packing Cost');
+
+    $headers = [
+        'A1' => 'part_name',
+        'B1' => 'item_category',
+        'C1' => 'weight_gram',
+        'D1' => 'qty_per_kg',
+        'E1' => 'volume_cm3',
+        'F1' => 'unit',
+        'G1' => 'purchase_price',
+        'H1' => 'item_price',
+        'I1' => 'max_capacity_gram',
+        'J1' => 'size_detail',
+        'K1' => 'revision_no',
+        'L1' => 'effective_date',
+        'M1' => 'status'
+    ];
+
+    foreach ($headers as $cell => $text) {
+        $sheet->setCellValue($cell, $text);
+    }
+
+    $sheet->getStyle('A1:M1')->getFont()->setBold(true);
 
     $query = $conn->query("SELECT part_name, item_category, weight_gram, qty_per_kg, volume_cm3, unit, purchase_price, item_price, max_capacity_gram, size_detail, revision_no, effective_date, status FROM tbl_packing_cost ORDER BY item_category, part_name");
     
+    $rowNum = 2;
     if ($query) {
         while ($row = $query->fetch_assoc()) {
-            fputcsv($output, $row);
+            $sheet->setCellValue('A' . $rowNum, $row['part_name']);
+            $sheet->setCellValue('B' . $rowNum, $row['item_category']);
+            $sheet->setCellValue('C' . $rowNum, $row['weight_gram']);
+            $sheet->setCellValue('D' . $rowNum, $row['qty_per_kg']);
+            $sheet->setCellValue('E' . $rowNum, $row['volume_cm3']);
+            $sheet->setCellValue('F' . $rowNum, $row['unit']);
+            $sheet->setCellValue('G' . $rowNum, $row['purchase_price']);
+            $sheet->setCellValue('H' . $rowNum, $row['item_price']);
+            $sheet->setCellValue('I' . $rowNum, $row['max_capacity_gram']);
+            $sheet->setCellValue('J' . $rowNum, $row['size_detail']);
+            $sheet->setCellValue('K' . $rowNum, $row['revision_no']);
+            $sheet->setCellValue('L' . $rowNum, $row['effective_date']);
+            $sheet->setCellValue('M' . $rowNum, $row['status']);
+            $rowNum++;
         }
     }
-    fclose($output);
+
+    foreach (range('A', 'M') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    $filename = "packing_cost_export_" . date('Ymd_His') . ".xlsx";
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment;filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+
+    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer->save('php://output');
     exit;
 }
 
@@ -577,12 +625,10 @@ if ($itemRes) {
                     <div class="search-container" style="flex:1; max-width:320px;">
                         <input type="text" id="search_packing_cost" placeholder="Cari nama item, kategori, atau size..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
                     </div>
-                    <div>
-                        <a href="packing_cost.php?action=export_excel" class="btn btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:600; background-color:#10b981; color:#fff; border:none; padding:10px 16px;">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
-                            Export Excel
-                        </a>
-                    </div>
+                   <a href="packing_cost.php?action=export_excel" class="btn btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:600; background-color:#10b981; color:#fff; border:none; padding:10px 16px;">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                        Export Excel
+                    </a>
                 </div>
 
                 <form id="bulkActionForm" method="post" action="packing_cost.php">
